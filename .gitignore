@@ -1,0 +1,39 @@
+# ── Virtual environment ────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Python cache ───────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── Pytest cache ───────────────────────────────────────────────────────────
+.pytest_cache/
+.cache/
+
+# ── SQLite database (user-specific, regenerated at runtime) ───────────────
+data/prediction_history.db
+
+# ── Compiled eval metrics cache (regenerated from model) ──────────────────
+# Keep preprocessing_config.json and eval_metrics.json — they document
+# the training setup and actual results, useful for reviewers.
+
+# ── OS files ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE files ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Jupyter notebooks (not part of this project) ──────────────────────────
+.ipynb_checkpoints/
+
+# ── Logs ──────────────────────────────────────────────────────────────────
+*.log
