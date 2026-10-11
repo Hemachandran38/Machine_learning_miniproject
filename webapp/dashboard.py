@@ -19,8 +19,6 @@ import os
 import json
 from typing import Optional
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import streamlit as st
 
 from config import (EVAL_METRICS_PATH as METRICS_PATH,
@@ -184,6 +182,9 @@ def render_per_class_table(metrics: dict) -> None:
 
 def render_f1_bar_chart(metrics: dict) -> None:
     """Plot a bar chart of F1-scores per digit class (light theme)."""
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+
     digits = list(range(10))
     f1s    = [metrics["per_class"][str(d)]["f1"] * 100 for d in digits]
 
@@ -240,6 +241,8 @@ def render_confusion_matrix(metrics: dict) -> None:
     Prefers the PNG saved during Phase 1 evaluate.py.
     Falls back to rendering it from the cached JSON data.
     """
+    import matplotlib.pyplot as plt
+
     if os.path.exists(CM_IMG_PATH):
         from PIL import Image as PILImage
         img = PILImage.open(CM_IMG_PATH)

@@ -17,9 +17,7 @@ import math
 import logging
 import uuid
 import numpy as np
-import pandas as pd
 import streamlit as st
-import matplotlib.pyplot as plt
 from PIL import Image
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -386,6 +384,7 @@ with tab_draw:
                         unsafe_allow_html=True)
             prob_fig = make_probability_chart(probs, digit)
             st.pyplot(prob_fig, use_container_width=True)
+            import matplotlib.pyplot as plt
             plt.close(prob_fig)
 
             # 28×28 input preview
@@ -569,6 +568,7 @@ with tab_history:
                         "Top 3"     : top3_str,
                     })
 
+                import pandas as pd
                 df = pd.DataFrame(table_data)
                 st.dataframe(
                     df,
@@ -588,6 +588,7 @@ with tab_history:
         with ht_right:
             st.markdown('<p class="section-label">Predictions per digit</p>',
                         unsafe_allow_html=True)
+            import matplotlib.pyplot as plt
             fig, ax = plt.subplots(figsize=(4.5, 4))
             fig.patch.set_facecolor("#FFFFFF")
             ax.set_facecolor("#F8FAFC")

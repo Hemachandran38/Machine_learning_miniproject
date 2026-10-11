@@ -2,9 +2,9 @@
 # charts.py — Probability bar chart for the light-theme UI.
 # =============================================================================
 
+from __future__ import annotations
+
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 
 
 # Light theme palette
@@ -31,6 +31,9 @@ def make_probability_chart(probabilities: list, predicted_digit: int) -> plt.Fig
     -------
     matplotlib Figure
     """
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+
     digits = list(range(10))
     probs  = [p * 100 for p in probabilities]
     colours = [_HIGHLIGHT if d == predicted_digit else _MUTED for d in digits]
