@@ -156,10 +156,21 @@ header    { visibility: hidden; }
     background: #FFFFFF;
     border: 2px solid #DBEAFE;
     border-radius: 16px;
-    padding: 8px;
+    padding: 6px;
     box-shadow: 0 2px 12px rgba(37,99,235,0.08), inset 0 0 0 1px #EFF6FF;
     display: inline-block;
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
+}
+
+/* Keep the drawing board at its true size so it has no white void around it */
+iframe[title="streamlit_drawable_canvas.canvas"] {
+    width: 280px !important;
+    height: 280px !important;
+    display: block;
+    border: none;
+    background: #000000;
+    margin: 0 auto;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -564,5 +575,21 @@ def _dark_css() -> str:
 [data-testid="stSelectbox"] > div > div {
     background: #1E293B !important; border-color: #334155 !important; color: #E2E8F0 !important;
 }
+
+/* Keep Streamlit-native widget text legible on the dark background
+   (these would otherwise inherit the light theme's black text) */
+[data-testid="stWidgetLabel"] p,
+[data-testid="stSliderTickBar"] p,
+[data-testid="stSliderThumbValue"],
+[data-testid="stCaptionContainer"] p,
+[data-testid="stExpander"] summary p,
+[data-testid="stSelectbox"] input,
+[data-testid="stInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-testid="stNumberInput"] input,
+[data-testid="stProgress"] p {
+    color: #E2E8F0 !important;
+}
+[data-testid="stExpander"] summary p { font-weight: 600; }
 </style>
 """
