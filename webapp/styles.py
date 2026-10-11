@@ -164,13 +164,17 @@ header    { visibility: hidden; }
 }
 
 /* Keep the drawing board at its true size so it has no white void around it */
-iframe[title="streamlit_drawable_canvas.canvas"] {
+[data-testid="stCustomComponentV1"] {
+    width: fit-content !important;
+    margin: 0 auto;
+}
+[data-testid="stCustomComponentV1"] iframe,
+iframe[title*="streamlit_drawable_canvas"] {
     width: 280px !important;
     height: 280px !important;
     display: block;
     border: none;
     background: #000000;
-    margin: 0 auto;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -520,7 +524,8 @@ def _dark_css() -> str:
     border-color: #334155 !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.35) !important;
 }
-.section-label { color: #94A3B8; }
+.section-label { color: #A5B4FC; }
+.side-note { color: #94A3B8; }
 
 .instructions { background: #1E293B; border-left-color: #3B82F6; }
 .instructions p { color: #BFDBFE; }
@@ -589,7 +594,9 @@ def _dark_css() -> str:
 [data-testid="stNumberInput"] input,
 [data-testid="stProgress"] p {
     color: #E2E8F0 !important;
+    opacity: 1 !important;
 }
 [data-testid="stExpander"] summary p { font-weight: 600; }
+[data-testid="stCaptionContainer"] { color: #E2E8F0; opacity: 1 !important; }
 </style>
 """
