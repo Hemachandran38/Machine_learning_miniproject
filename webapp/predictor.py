@@ -11,21 +11,28 @@
 #   • It never changes while the app is running.
 # =============================================================================
 
+from __future__ import annotations
+
 import os
 import numpy as np
 import streamlit as st
-import tensorflow as tf
 
 from config import MODEL_PATH
 
 # ── Suppress TensorFlow info/warning messages in the console ──────────────────
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
+# TensorFlow is imported lazily inside load_model() (not at module import).
+# Loading TF at startup can exceed the memory of small Streamlit Cloud
+# containers and be silently killed, causing "connection refused" on deploy.
+# By deferring the import until the first prediction, the app server starts
+# fast and light; only the prediction action pays the TF startup cost.
+
 NUM_CLASSES  = 10   # digits 0–9
 
 
 @st.cache_resource(show_spinner="Loading digit recognition model …")
-def load_model() -> tf.keras.Model:
+def load_model() -> "tf.keras.Model":
     """
     Load the trained Keras model from disk.
 
@@ -40,6 +47,8 @@ def load_model() -> tf.keras.Model:
     ------
     SystemExit if the .keras file does not exist (gives a clear user message).
     """
+    import tensorflow as tf
+
     if not os.path.exists(MODEL_PATH):
         st.error(
             f"**Model not found.**\n\n"
@@ -53,7 +62,7 @@ def load_model() -> tf.keras.Model:
     return model
 
 
-def predict(model: tf.keras.Model, tensor: np.ndarray) -> dict:
+def predict(model: "tf.keras.Model", tensor: np.ndarray) -> dict:
     """
     Run the model on a preprocessed image tensor and return structured results.
 
