@@ -13,12 +13,16 @@
 # =============================================================================
 
 import numpy as np
+import streamlit as st
+from typing import List, Tuple
 from PIL import Image, ImageOps, ImageFilter
 
+from config import IMG_HEIGHT, MNIST_PADDING
 
-# ── Constants (must match config.py from Phase 1) ─────────────────────────────
-IMG_SIZE    = 28          # final image is 28×28
-PADDING     = 4           # pixels of black border around the digit after centering
+
+# ── Constants (imported from config.py so training and inference always agree) ─
+IMG_SIZE = IMG_HEIGHT     # final image is 28×28
+PADDING  = MNIST_PADDING  # black border kept around the digit after centering
 
 
 def is_canvas_empty(image_data: np.ndarray, threshold: int = 10) -> bool:
@@ -134,6 +138,41 @@ def _smooth(img: Image.Image) -> Image.Image:
     return img.filter(ImageFilter.GaussianBlur(radius=0.5))
 
 
+def _gray_to_tensor(gray_img: Image.Image) -> tuple:
+    """
+    Turn a grayscale PIL image of a single digit into a model-ready tensor.
+
+    This is the shared backbone used by both single-digit and multi-digit
+    preprocessing:
+        crop to bounding box → resize (aspect preserved, centred)
+        → smooth → normalise ÷ 255 → add batch + channel dims
+
+    Returns
+    -------
+    tensor      : np.ndarray, shape (1, 28, 28, 1), float32 in [0, 1]
+    preview_img : PIL Image (28×28 grayscale)
+    """
+    # ── Crop to digit bounding box ────────────────────────────────────────
+    cropped = _crop_to_digit(gray_img, margin=6)
+
+    # ── Resize to 28×28, preserving aspect ratio, centred ─────────────────
+    resized = _resize_preserving_aspect(cropped, target=IMG_SIZE, padding=PADDING)
+
+    # ── Smooth ────────────────────────────────────────────────────────────
+    smoothed = _smooth(resized)
+
+    # ── Convert to float32 NumPy array and normalise ÷ 255 ────────────────
+    arr = np.array(smoothed, dtype=np.float32) / 255.0
+
+    # ── Add batch and channel dimensions: (28,28) → (1,28,28,1) ───────────
+    tensor = np.expand_dims(np.expand_dims(arr, -1), 0)
+
+    # Keep an unmodified PIL copy for the "preprocessed preview" widget.
+    preview_img = Image.fromarray((arr * 255).astype(np.uint8), mode="L")
+
+    return tensor, preview_img
+
+
 def preprocess_canvas_image(image_data: np.ndarray) -> tuple:
     """
     Full preprocessing pipeline: canvas RGBA → model-ready tensor.
@@ -144,37 +183,87 @@ def preprocess_canvas_image(image_data: np.ndarray) -> tuple:
     preview_img : PIL Image (28×28 grayscale) for display in the UI
     is_empty    : bool — True if nothing was drawn
     """
-    # ── Guard: empty canvas ───────────────────────────────────────────────────
+    # ── Guard: empty canvas ───────────────────────────────────────────────
     if is_canvas_empty(image_data):
         return None, None, True
 
-    # ── Step 1: RGBA → grayscale ───────────────────────────────────────────────
+    # ── Step 1: RGBA → grayscale ──────────────────────────────────────────
     gray = _rgba_to_grayscale_pil(image_data)
 
-    # ── Step 2: Crop to digit bounding box ────────────────────────────────────
-    cropped = _crop_to_digit(gray, margin=6)
-
-    # ── Step 3: Resize to 28×28, preserving aspect ratio, centred ─────────────
-    resized = _resize_preserving_aspect(cropped, target=IMG_SIZE, padding=PADDING)
-
-    # ── Step 4: Smooth ────────────────────────────────────────────────────────
-    smoothed = _smooth(resized)
-
-    # ── Step 5: Convert to float32 NumPy array and normalise ÷ 255 ────────────
-    # The model was trained on float32 values in [0, 1].
-    arr = np.array(smoothed, dtype=np.float32) / 255.0
-
-    # ── Step 6: Add batch and channel dimensions ───────────────────────────────
-    # arr shape is currently (28, 28).
-    # Model expects               (1, 28, 28, 1).
-    #   np.expand_dims(arr, -1)  → (28, 28, 1)   adds channel dim
-    #   np.expand_dims(…, 0)     → (1, 28, 28, 1) adds batch dim
-    tensor = np.expand_dims(np.expand_dims(arr, -1), 0)
-
-    # Keep an unmodified PIL copy for the "preprocessed preview" widget.
-    preview_img = Image.fromarray((arr * 255).astype(np.uint8), mode="L")
+    # ── Steps 2–6: crop → resize → smooth → normalise → add dims ──────────
+    tensor, preview_img = _gray_to_tensor(gray)
 
     return tensor, preview_img, False
+
+
+def segment_canvas_image(image_data: np.ndarray,
+                         min_area: int = 40) -> tuple:
+    """
+    Split a canvas containing MULTIPLE digits into individual digit tensors.
+
+    Connected bright regions (components) are found with scipy's label()
+    and processed left-to-right, so "1 2 3" becomes three 28×28 tensors in
+    the order the digits appear.
+
+    Parameters
+    ----------
+    image_data : RGBA NumPy array from the canvas, shape (H, W, 4)
+    min_area   : ignore components smaller than this many pixels (noise)
+
+    Returns
+    -------
+    tensors  : list[np.ndarray]  — each (1, 28, 28, 1), float32 in [0, 1]
+    previews : list[PIL.Image]   — matching 28×28 previews
+    is_empty : bool              — True if no digit-sized component found
+    """
+    if is_canvas_empty(image_data):
+        return [], [], True
+
+    # Find each digit's bounding box, sorted left-to-right.
+    boxes = _find_component_boxes(image_data, min_area=min_area)
+
+    if not boxes:
+        return [], [], True
+
+    tensors, previews = [], []
+    gray = np.array(_rgba_to_grayscale_pil(image_data))
+    for (x0, x1, y0, y1) in boxes:
+        # Isolate this component on a black background, then reuse the
+        # standard single-digit pipeline on the crop.
+        sub = gray[y0:y1 + 1, x0:x1 + 1]
+        sub_img = Image.fromarray(sub, mode="L")
+        tensor, preview = _gray_to_tensor(sub_img)
+        tensors.append(tensor)
+        previews.append(preview)
+
+    return tensors, previews, False
+
+
+def _find_component_boxes(image_data: np.ndarray,
+                          min_area: int = 40,
+                          threshold: int = 50) -> List[tuple]:
+    """
+    Locate the connected bright components on the canvas and return their
+    bounding boxes, sorted left-to-right.
+
+    Returns
+    -------
+    list of (x0, x1, y0, y1) tuples — one per digit-sized component.
+    """
+    from scipy import ndimage
+
+    gray     = np.array(_rgba_to_grayscale_pil(image_data))
+    labeled, n = ndimage.label(gray > threshold)
+
+    boxes = []
+    for i in range(1, n + 1):
+        ys, xs = np.where(labeled == i)
+        if len(xs) < min_area:
+            continue
+        boxes.append((xs.min(), xs.max(), ys.min(), ys.max()))
+
+    boxes.sort(key=lambda b: b[0])
+    return boxes
 
 
 def get_example_image(digit: int = 3) -> np.ndarray:
@@ -193,10 +282,9 @@ def get_example_image(digit: int = 3) -> np.ndarray:
     -------
     RGBA NumPy array, shape (280, 280, 4)  — upscaled for visibility
     """
-    import tensorflow as tf
-
-    # Load only the test set (no training overhead).
-    (_, _), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+    # The test set is cached so the 11 MB dataset is only loaded once,
+    # instead of on every "Try Example" click.
+    x_test, y_test = _load_mnist_test()
 
     # Find all test images of the requested digit.
     indices = np.where(y_test == digit)[0]
@@ -207,3 +295,12 @@ def get_example_image(digit: int = 3) -> np.ndarray:
     pil_img  = Image.fromarray(img_28, mode="L").resize((280, 280), Image.NEAREST)
     pil_rgba = pil_img.convert("RGBA")
     return np.array(pil_rgba)
+
+
+@st.cache_data(show_spinner=False)
+def _load_mnist_test():
+    """Load (and cache) the MNIST test set.  Ensures a single download/read."""
+    import tensorflow as tf
+
+    (_, _), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+    return x_test, y_test

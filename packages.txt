@@ -1,0 +1,5 @@
+# System packages required by TensorFlow / Pillow / Streamlit
+# Used by Streamlit Community Cloud (and other PaaS that read packages.txt).
+libgl1
+libglib2.0-0
+libgomp1

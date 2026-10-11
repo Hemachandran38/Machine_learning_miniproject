@@ -1,0 +1,23 @@
+# ── Virtual environments ──────────────────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Python / test caches ──────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.cache/
+
+# ── Git / IDE / OS ────────────────────────────────────────────────────────
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ── Runtime artefacts (regenerated inside the container) ──────────────────
+data/prediction_history.db
+*.log

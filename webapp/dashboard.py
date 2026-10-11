@@ -17,17 +17,15 @@
 
 import os
 import json
+from typing import Optional
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import streamlit as st
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
-_WEBAPP_DIR   = os.path.dirname(os.path.abspath(__file__))
-_PROJECT_DIR  = os.path.dirname(_WEBAPP_DIR)
-METRICS_PATH  = os.path.join(_PROJECT_DIR, "data",    "eval_metrics.json")
-CM_IMG_PATH   = os.path.join(_PROJECT_DIR, "outputs", "confusion_matrix.png")
-CURVES_PATH   = os.path.join(_PROJECT_DIR, "outputs", "training_curves.png")
+from config import (EVAL_METRICS_PATH as METRICS_PATH,
+                    CONFUSION_MATRIX_PATH as CM_IMG_PATH,
+                    TRAINING_CURVES_PATH as CURVES_PATH)
 
 DIGIT_NAMES   = [str(i) for i in range(10)]
 
@@ -119,6 +117,22 @@ def load_metrics(_model) -> dict:
         with open(METRICS_PATH) as f:
             return json.load(f)
     return compute_and_cache_metrics(_model)
+
+
+def load_cached_metrics() -> Optional[dict]:
+    """
+    Read the cached metrics JSON if it exists, WITHOUT triggering a full
+    evaluation of the model.  Used for lightweight values (e.g. the test
+    accuracy shown in the hero banner and footer).
+
+    Returns
+    -------
+    dict | None — metrics dict, or None if no cached file is present yet.
+    """
+    if os.path.exists(METRICS_PATH):
+        with open(METRICS_PATH) as f:
+            return json.load(f)
+    return None
 
 
 # =============================================================================
@@ -217,6 +231,7 @@ def render_f1_bar_chart(metrics: dict) -> None:
               edgecolor=_GRID, labelcolor=_TEXT, framealpha=1)
     plt.tight_layout(pad=0.5)
     st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
 
 
 def render_confusion_matrix(metrics: dict) -> None:
@@ -249,6 +264,7 @@ def render_confusion_matrix(metrics: dict) -> None:
         plt.colorbar(im, ax=ax)
         plt.tight_layout()
         st.pyplot(fig, use_container_width=True)
+        plt.close(fig)
 
 
 def render_training_curves() -> None:

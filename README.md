@@ -14,7 +14,7 @@ prediction history, model performance dashboard, and automated tests.
 | ✏️ Draw & Predict | Freehand canvas with real-time CNN inference |
 | 📋 Prediction History | SQLite-backed log of every prediction (no images stored) |
 | 📊 Model Dashboard | Real MNIST test metrics — accuracy, F1, confusion matrix |
-| 🧪 Automated Tests | 61 pytest tests covering preprocessing and model inference |
+| 🧪 Automated Tests | 82 pytest tests covering preprocessing, segmentation, history, and model inference |
 | 🎲 MNIST Examples | Load real test-set images with one click |
 | 🔍 Input Preview | Shows the exact 28×28 tensor fed to the model |
 
@@ -46,7 +46,9 @@ digit_recognition/
 │
 ├── tests/                   ← Automated test suite
 │   ├── test_preprocessor.py ← 26 preprocessing tests
-│   └── test_predictor.py    ← 35 model inference tests
+│   ├── test_predictor.py    ← 35 model inference tests
+│   ├── test_history.py      ← 13 SQLite history / isolation tests
+│   └── test_segmentation.py ← 8 multi-digit segmentation tests
 │
 ├── models/
 │   └── digit_recognizer.keras  ← Saved trained model
@@ -104,8 +106,8 @@ graph TD
 ### Step-by-step
 
 ```powershell
-# 1. Navigate to the project
-cd "C:\Users\hemus\OneDrive\ドキュメント\Ml_project\digit_recognition"
+# 1. Navigate to the project (wherever you cloned/downloaded it)
+cd "path\to\digit_recognition"
 
 # 2. Create a virtual environment
 python -m venv venv
@@ -210,12 +212,14 @@ by `evaluate.py` (Phase 1) and cached in `data/eval_metrics.json`.
 
 ## Testing
 
-61 automated tests in two files:
+82 automated tests in four files:
 
 | File | Tests | What it verifies |
 |---|---|---|
 | `test_preprocessor.py` | 26 | Tensor shape, dtype, range, polarity, aspect ratio, all 10 MNIST digits |
 | `test_predictor.py` | 35 | Model loading, output structure, softmax sum, per-class accuracy ≥ 97%, edge cases |
+| `test_history.py` | 13 | Save/read, per-session isolation, feedback, single delete, CSV export, schema migration |
+| `test_segmentation.py` | 8 | Multi-digit component detection, left-to-right ordering, noise filtering |
 
 ```powershell
 # Run all tests with details
@@ -244,11 +248,11 @@ python -m pytest tests/test_predictor.py -v
 
 ## Future Enhancements (Phase 4+)
 
-- [ ] Multi-digit recognition (segmentation + multiple predictions)
+- [x] Export prediction history as CSV
 - [ ] Custom drawing style calibration
 - [ ] REST API endpoint for external integrations
 - [ ] Model retraining with user-drawn data
-- [ ] Export prediction history as CSV
+- [ ] Retrain on real user feedback (collected via the "correct this prediction" option)
 
 ---
 

@@ -12,21 +12,14 @@
 # =============================================================================
 
 import os
-import sys
 import numpy as np
 import streamlit as st
 import tensorflow as tf
 
+from config import MODEL_PATH
+
 # ── Suppress TensorFlow info/warning messages in the console ──────────────────
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-
-
-# ── Model path (mirrors Phase 1 config.py) ────────────────────────────────────
-# We compute the path relative to this file so the app works from any
-# working directory.
-_WEBAPP_DIR  = os.path.dirname(os.path.abspath(__file__))
-_PROJECT_DIR = os.path.dirname(_WEBAPP_DIR)
-MODEL_PATH   = os.path.join(_PROJECT_DIR, "models", "digit_recognizer.keras")
 
 NUM_CLASSES  = 10   # digits 0–9
 
@@ -76,9 +69,9 @@ def predict(model: tf.keras.Model, tensor: np.ndarray) -> dict:
         "confidence"  : float — probability of the predicted class (0.0–1.0)
         "probabilities": list[float] — probabilities for all 10 classes
     """
-    # model.predict() returns a 2D array of shape (1, 10).
-    # Each value is the probability for one digit class (they sum to 1.0).
-    probs     = model.predict(tensor, verbose=0)[0]   # shape → (10,)
+    # Calling the model directly (rather than model.predict) avoids the
+    # predict-loop overhead for a single image and is significantly faster.
+    probs     = np.asarray(model(tensor, training=False))[0]  # shape → (10,)
     digit     = int(np.argmax(probs))                 # index of highest probability
     confidence = float(probs[digit])
 
