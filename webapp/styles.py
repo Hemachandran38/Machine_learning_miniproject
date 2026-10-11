@@ -303,33 +303,41 @@ iframe[title*="streamlit_drawable_canvas"] {
 /* ════════════════════════════════════════════════════════════════════════════
    BUTTONS
    ════════════════════════════════════════════════════════════════════════════ */
-.stButton > button {
+.stButton button, [data-testid="stButton"] button {
     width: 100%;
     border-radius: 10px !important;
     font-weight: 600 !important;
     font-size: 0.88rem !important;
     padding: 0.52rem 0 !important;
     transition: all 0.15s ease !important;
-    border: 1.5px solid transparent !important;
 }
 /* Primary button */
-.stButton > button[kind="primary"] {
+button[kind="primary"],
+[data-testid="stBaseButton-primary"],
+[data-testid="stBaseButton-primaryFormSubmit"] {
     background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
     color: #FFFFFF !important;
+    border: 1.5px solid transparent !important;
     box-shadow: 0 3px 10px rgba(37,99,235,0.30) !important;
 }
-.stButton > button[kind="primary"]:hover {
+button[kind="primary"]:hover,
+[data-testid="stBaseButton-primary"]:hover,
+[data-testid="stBaseButton-primaryFormSubmit"]:hover {
     box-shadow: 0 5px 18px rgba(37,99,235,0.40) !important;
     transform: translateY(-1px) !important;
 }
 /* Secondary buttons */
-.stButton > button[kind="secondary"] {
+button[kind="secondary"],
+[data-testid="stBaseButton-secondary"],
+[data-testid="stBaseButton-secondaryFormSubmit"] {
     background: #FFFFFF !important;
     color: #475569 !important;
     border: 1.5px solid #E2E8F0 !important;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
 }
-.stButton > button[kind="secondary"]:hover {
+button[kind="secondary"]:hover,
+[data-testid="stBaseButton-secondary"]:hover,
+[data-testid="stBaseButton-secondaryFormSubmit"]:hover {
     border-color: #2563EB !important;
     color: #2563EB !important;
 }
@@ -568,9 +576,18 @@ def _dark_css() -> str:
 [data-testid="stTabs"] [data-baseweb="tab"] { color: #94A3B8 !important; }
 [data-testid="stTabs"] [aria-selected="true"] { background: #2563EB !important; color: #FFFFFF !important; }
 
-.stButton > button[kind="secondary"] {
-    background: #1E293B !important; color: #CBD5E1 !important;
+button[kind="secondary"],
+[data-testid="stBaseButton-secondary"],
+[data-testid="stBaseButton-secondaryFormSubmit"] {
+    background: #1E293B !important;
+    color: #CBD5E1 !important;
     border-color: #334155 !important;
+}
+button[kind="secondary"]:hover,
+[data-testid="stBaseButton-secondary"]:hover,
+[data-testid="stBaseButton-secondaryFormSubmit"]:hover {
+    border-color: #3B82F6 !important;
+    color: #FFFFFF !important;
 }
 [data-testid="stMetricLabel"] { color: #94A3B8 !important; }
 [data-testid="stMetricValue"] { color: #60A5FA !important; }
